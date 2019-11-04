@@ -8,10 +8,10 @@ ENVAR_SEARCH_TEXT = 'search_text'
 ENVAR_OUTPUT_FILE = 'output_file'
 
 search_dir = os.environ.get(ENVAR_SEARCH_DIR)
-search_text = os.environ(ENVAR_SEARCH_TEXT)
-output_file = os.environ(ENVAR_OUTPUT_FILE)
+search_text = os.environ.get(ENVAR_SEARCH_TEXT)
+output_file = os.environ.get(ENVAR_OUTPUT_FILE)
 
-if search_dir is None or search_text is None or output_file is None or search_text = 'none' or '00000' in output_file:
+if search_dir is None or search_text is None or output_file is None or search_text == 'none' or '00000' in output_file:
     print(f"No valid configuration for deployment. Please reconfigure envars:\n\n{ENVAR_SEARCH_TEXT}\n{ENVAR_OUTPUT_FILE}\n\n. Going to sleep...")
 elif os.path.exists(output_file):
     print(f"Output file: {output_file} already exists. This search seems complete. Going to sleep...")
