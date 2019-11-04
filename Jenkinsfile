@@ -32,12 +32,7 @@ pipeline {
             steps {
                 script {
                     echo "Build docker image"
-                    sh """cat <<EOF > payload_file.yaml
-env:
-   - name: "tarball_url"
-     value: "${tarball_url}"
-EOF"""
-                    sh "curl -i -H 'Content-Type: application/yaml' --data-binary @payload_file.yaml -k -X POST ${img_build_hook}"
+                    sh "curl -i -H 'Content-Type: application/yaml' -k -X POST ${img_build_hook}"
                 }
             }
         }
