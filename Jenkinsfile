@@ -1,38 +1,49 @@
-def img_build_hook = null
+def ocp_map = '/mnt/ocp/jenkins-openshift-mappings.json'
+def bc_section = 'build-configs'
+
+def my_bc = null
 
 pipeline {
     agent { label 'python' }
     stages {
-        stage('Check Image Build Hook') {
-            when {
-                expression { env.IMG_BUILD_HOOKS != null }
-            }
+        stage('Load OCP Mappings') {
             steps {
-                echo "Check Image Build Hook"
+                echo "Load OCP Mapping document"
                 script {
-                    def jsonObj = readJSON text: env.IMG_BUILD_HOOKS
-                    if (env.GIT_URL in jsonObj) {
-                        echo "Build docker image"
-                        if (env.BRANCH_NAME in jsonObj[env.GIT_URL]) {
-                            img_build_hook = jsonObj[env.GIT_URL][env.BRANCH_NAME]
-                        } else {
-                            img_build_hook = jsonObj[env.GIT_URL]['default']
+                    def exists = fileExists ocp_map
+                    if (exists){
+                        def jsonObj = readJSON file: ocp_map
+                        if (bc_section in jsonObj){
+                            if (env.GIT_URL in jsonObj[bc_section]) {
+                                echo "Found BC for Git repo: ${env.GIT_URL}"
+                                if (env.BRANCH_NAME in jsonObj[bc_section][env.GIT_URL]) {
+                                    img_build_hook = jsonObj[bc_section][env.GIT_URL][env.BRANCH_NAME]
+                                } else {
+                                    img_build_hook = jsonObj[bc_section][env.GIT_URL]['default']
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        stage('Build & Push Image') {
+        stage('Build Image') {
             when {
                 allOf {
-                    expression { img_build_hook != null }
+                    expression { my_bc != null }
                     expression { env.CHANGE_ID == null } // Not pull request
                 }
             }
             steps {
                 script {
-                    echo "Build docker image"
-                    sh "curl -i -H 'Content-Type: application/yaml' -k -X POST ${img_build_hook}"
+                    openshift.withCluster() {
+                        openshift.withProject() {
+                            echo "Starting image build: ${openshift.project()}:${my_bc}"
+                            def bc = openshift.selector("bc", my_bc)
+                            def buildSel = bc.startBuild()
+                            buildSel.logs("-f")
+                        }
+                    }
                 }
             }
         }
