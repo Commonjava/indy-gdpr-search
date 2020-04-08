@@ -37,7 +37,7 @@ else:
                     print(f"{filepath}: {e}")
 
     with open(output_file, 'w') as f:
-        f.write(f"Search phrase: '{search_text}'\nSearch directory: {search_dir}\nResults: {len(results)}\n-------------------------\n")
+        f.write(f"Search phrases: {search_texts}\nSearch directory: {search_dir}\nResults: {len(results)}\n-------------------------\n")
         f.write("\n".join(results))
 
 
