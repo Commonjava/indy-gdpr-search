@@ -8,14 +8,15 @@ ENVAR_SEARCH_TEXT = 'search_text'
 ENVAR_OUTPUT_FILE = 'output_file'
 
 search_dir = os.environ.get(ENVAR_SEARCH_DIR)
-search_text = os.environ.get(ENVAR_SEARCH_TEXT)
+search_texts = os.environ.get(ENVAR_SEARCH_TEXT).split('|')
 output_file = os.environ.get(ENVAR_OUTPUT_FILE)
 
-if search_dir is None or search_text is None or output_file is None or search_text == 'none' or '00000' in output_file:
+if search_dir is None or search_texts is None len(search_texts) < 1 or output_file is None or search_texts[0] == 'none' or '00000' in output_file:
     print(f"No valid configuration for deployment. Please reconfigure envars:\n\n{ENVAR_SEARCH_TEXT}\n{ENVAR_OUTPUT_FILE}\n\n. Going to sleep...")
 elif os.path.exists(output_file):
     print(f"Output file: {output_file} already exists. This search seems complete. Going to sleep...")
 else:
+    print(f"Searching for: {search_texts} in {search_dir} and printing results to {output_file}")
     results = []
     for dirpath, dirnames, files in os.walk(search_dir):
         for fname in files:
@@ -24,13 +25,14 @@ else:
                 try:
                     found = False
                     for line in f:
-                        if search_text in line:
-                            print(f"+{filepath}")
-                            results.append(filepath)
-                            found = True
-                            break
-                    if found is False:
-                        print(f"-{filepath}")
+                        for search_text in search_texts:
+                            if search_text in line:
+                                print(f"+{filepath}")
+                                results.append(filepath)
+                                found = True
+                                break
+                    # if found is False:
+                    #     print(f"-{filepath}")
                 except Exception as e:
                     print(f"{filepath}: {e}")
 
